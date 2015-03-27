@@ -12,6 +12,7 @@ import (
 type ClientConfig struct {
   *influxdb.ClientConfig
   Destination string
+  CustomQuery string
 }
 
 type Client struct {
@@ -20,12 +21,13 @@ type Client struct {
 }
 
 func parseFlags() (*ClientConfig) {
-  config := &ClientConfig{&influxdb.ClientConfig{}, ""}
+  config := &ClientConfig{&influxdb.ClientConfig{}, "", ""}
   flag.StringVar(&config.Host, "host", "localhost:8086", "host to connect to")
   flag.StringVar(&config.Username, "username", "root", "username to authenticate as")
   flag.StringVar(&config.Password, "password", "root", "password to authenticate with")
   flag.StringVar(&config.Database, "database", "", "database to dump")
   flag.StringVar(&config.Destination, "out", "-", "output file (default to stdout)")
+  flag.StringVar(&config.CustomQuery, "query", "select * from /.*/", "influxdb query")
   flag.BoolVar(&config.IsSecure, "https", false, "connect via https")
   flag.Parse()
   if config.Database == "" {
@@ -57,7 +59,7 @@ func (self *Client) DumpSeries() {
   } else {
     file = os.Stdout
   }
-  err = self.QueryStream("SELECT * FROM /.*/", file)
+  err = self.QueryStream(self.CustomQuery, file)
   if err != nil {
     log.Fatal(err)
   }
